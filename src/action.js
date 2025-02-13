@@ -12,7 +12,7 @@ async function main() {
     // core.setOutput("time", time);
 
     let files = await fs.readdir("./");
-    console.log(files);
+    console.log("files", files);
 
     // Get the JSON webhook payload for the event that triggered the workflow
     // const payload = JSON.stringify(github.context.payload, undefined, 2);
