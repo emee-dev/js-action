@@ -22,4 +22,4 @@ with:
   who-to-greet: "Mona the Octocat"
 ```
 
-some additional changes
+some changes are invalid
