@@ -1,0 +1,45 @@
+meta {
+  name: create product
+  type: http
+  seq: 3
+}
+
+post {
+  url: http://localhost:3000/products
+  body: json
+  auth: none
+}
+
+headers {
+  Authorization: Bearer 22202
+  Accept: application/json
+  Content-Type: application/json
+  X-rate-limit: 200
+  User-Agent: web
+}
+
+body:json {
+  {
+    "label": "Dell XPS",
+    "sku": "Computers",
+    "product_price": 30000,
+    "currency": "dollars"
+  }
+}
+
+assert {
+  res.status: eq 200
+}
+
+script:pre-request {
+  console.log("Pre request script")
+}
+
+script:post-response {
+  let headers = req.getHeaders();
+  console.log(headers)
+}
+
+docs {
+  The is a demo documentation for get_products.
+}

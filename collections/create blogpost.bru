@@ -1,0 +1,49 @@
+meta {
+  name: create blogpost
+  type: http
+  seq: 6
+}
+
+post {
+  url: http://localhost:3000/user?ignore=true
+  body: text
+  auth: basic
+}
+
+query {
+  ignore: true
+}
+
+headers {
+  Accept: application/json
+  Content-Type: application/json
+  x-redis-ratelimit: 5000
+}
+
+auth:basic {
+  username: samuel212
+  password: YUSmmxo31001
+}
+
+body:json {
+  {
+    "username": "user@gmail.com",
+    "firstname": "samuel",
+    "lastname": "john",
+    "age": 34,
+    "hobbies": [
+      "video games",
+      "swimming",
+      "racing"
+    ],
+    "isMale": true
+  }
+}
+
+body:text {
+  The best blogs are those that are empty
+}
+
+vars:pre-request {
+  API_KEY: api_Buek2001
+}

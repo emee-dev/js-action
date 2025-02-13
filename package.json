@@ -4,8 +4,8 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "build": "ncc build ./src/action.js -o dist",
-    "git:deploy": "ncc ncc build ./src/action.js -o dist"
+    "dev": "tsx ./src/action.ts",
+    "build": "ncc build ./src/action.ts -o dist"
   },
   "keywords": [],
   "author": "",
@@ -13,7 +13,9 @@
   "description": "",
   "devDependencies": {
     "@types/node": "^22.13.1",
-    "@vercel/ncc": "^0.38.3"
+    "@vercel/ncc": "^0.38.3",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3"
   },
   "dependencies": {
     "@actions/core": "^1.11.1",

@@ -1,0 +1,20 @@
+meta {
+  name: drop database
+  type: http
+  seq: 1
+}
+
+put {
+  url: http://localhost:3000/database
+  body: formUrlEncoded
+  auth: none
+}
+
+body:form-urlencoded {
+  server_id: 2902
+}
+
+body:multipart-form {
+  server_id: 2001
+  binary_file: @file(C:\Users\DELL\Desktop\shimmer\app.yml)
+}

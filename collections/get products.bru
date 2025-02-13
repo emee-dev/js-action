@@ -1,0 +1,46 @@
+meta {
+  name: get products
+  type: http
+  seq: 2
+}
+
+get {
+  url: http://localhost:3000/products?limit=20&page=2
+  body: json
+  auth: none
+}
+
+query {
+  limit: 20
+  page: 2
+}
+
+headers {
+  Authorization: Bearer 22202
+  Accept: application/json
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "productId": "id_2929020",
+    "sku": "Computers"
+  }
+}
+
+assert {
+  res.status: eq 200
+}
+
+script:pre-request {
+  console.log("Pre request script")
+}
+
+script:post-response {
+  let headers = req.getHeaders();
+  console.log(headers)
+}
+
+docs {
+  The is a demo documentation for get_products.
+}

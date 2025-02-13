@@ -1,0 +1,41 @@
+meta {
+  name: create user
+  type: http
+  seq: 5
+}
+
+post {
+  url: http://localhost:3000/user
+  body: json
+  auth: basic
+}
+
+headers {
+  Accept: application/json
+  Content-Type: application/json
+  x-redis-ratelimit: 5000
+}
+
+auth:basic {
+  username: samuel212
+  password: YUSmmxo31001
+}
+
+body:json {
+  {
+    "username": "user@gmail.com",
+    "firstname": "samuel",
+    "lastname": "john",
+    "age": 34,
+    "hobbies": [
+      "video games",
+      "swimming",
+      "racing"
+    ],
+    "isMale": true
+  }
+}
+
+vars:pre-request {
+  API_KEY: api_Buek2001
+}
