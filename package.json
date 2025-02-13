@@ -4,7 +4,7 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "dev": "tsx ./src/action.ts",
+    "dev": "cross-env NODE_ENV=development tsx ./src/action.ts",
     "build": "ncc build ./src/action.ts -o dist",
     "clean": "&& rm -rf ./*.bru ./collection"
   },

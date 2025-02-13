@@ -31,29 +31,32 @@ const readFilesRecursively = async (
 };
 
 /**
+ * Standardizes file paths by removing machine-specific directories and returning
+ * a relative path within the `collections` folder. This ensures consistency across
+ * different environments.
  *
- * @param collection_item
- * @param base_path
- * @returns
+ * @param collection_item - The full file path to be standardized.
+ * @param base_path - The base directory path to be removed.
+ * @returns The relative file path under the `collections` folder.
  *
- * Makes the file names unique across environments, by striping the machine specific directories
- * and returning the relative file path under the collection folder.
+ * @example
+ * // Given:
+ * const collection_item = "C:\\Users\\DELL\\Desktop\\js-action\\collections\\Private API\\drop database.bru";
+ * const base_path = "C:\\Users\\DELL\\Desktop\\js-action";
  *
- * eg
- *
- * "C:\Users\DELL\Desktop\js-action\collections\Private API\drop database.bru"
- *
- * becomes
- * ./collections/Private API/drop database.bru
+ * // Result:
+ * "./collections/Private API/drop database.bru"
  */
 const standardizePath = (collection_item: string, base_path: string) =>
   `.${base_path}` + collection_item.split(base_path)[1];
 
 async function main() {
   try {
-    const collection_path = core.getInput("collection_path");
+    const collection_path =
+      process.env.NODE_ENV === "development"
+        ? "./collections"
+        : core.getInput("collection_path", { required: true });
 
-    // const ROOT_DIR = path.resolve("./collections");
     const ROOT_DIR = path.resolve(collection_path);
 
     const base_path = getBasePath(ROOT_DIR);
@@ -61,9 +64,9 @@ async function main() {
 
     // console.log("Processed files:", result.keys());
 
-    [...result.keys()].map((item) =>
-      console.log(standardizePath(item, base_path))
-    );
+    // [...result.keys()].map((item) =>
+    //   console.log(standardizePath(item, base_path))
+    // );
 
     // `who-to-greet` input defined in action metadata file
     // const nameToGreet = core.getInput("who-to-greet");
