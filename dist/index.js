@@ -31682,23 +31682,37 @@ module.exports = parseParams
 /******/ 
 /************************************************************************/
 var __webpack_exports__ = {};
-/* harmony import */ var _actions_core__WEBPACK_IMPORTED_MODULE_0__ = __nccwpck_require__(7484);
-/* harmony import */ var _actions_github__WEBPACK_IMPORTED_MODULE_1__ = __nccwpck_require__(3228);
+
+// EXTERNAL MODULE: ./node_modules/@actions/core/lib/core.js
+var core = __nccwpck_require__(7484);
+// EXTERNAL MODULE: ./node_modules/@actions/github/lib/github.js
+var github = __nccwpck_require__(3228);
+;// CONCATENATED MODULE: external "node:fs/promises"
+const promises_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("node:fs/promises");
+;// CONCATENATED MODULE: ./src/action.js
 
 
 
-try {
-  // `who-to-greet` input defined in action metadata file
-  const nameToGreet = _actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput("who-to-greet");
-  console.log(`Hello ${nameToGreet}!`);
 
-  const time = new Date().toTimeString();
-  _actions_core__WEBPACK_IMPORTED_MODULE_0__.setOutput("time", time);
+async function main() {
+  try {
+    // `who-to-greet` input defined in action metadata file
+    // const nameToGreet = core.getInput("who-to-greet");
+    // console.log(`Hello ${nameToGreet}!`);
 
-  // Get the JSON webhook payload for the event that triggered the workflow
-  const payload = JSON.stringify(_actions_github__WEBPACK_IMPORTED_MODULE_1__.context.payload, undefined, 2);
-  console.log(`The event payload: ${payload}`);
-} catch (error) {
-  _actions_core__WEBPACK_IMPORTED_MODULE_0__.setFailed(error.message);
+    // const time = new Date().toTimeString();
+    // core.setOutput("time", time);
+
+    let files = await promises_namespaceObject.readdir("./");
+    console.log(files);
+
+    // Get the JSON webhook payload for the event that triggered the workflow
+    // const payload = JSON.stringify(github.context.payload, undefined, 2);
+    // console.log(`The event payload: ${payload}`);
+  } catch (error) {
+    core.setFailed(error.message);
+  }
 }
+
+main();
 
