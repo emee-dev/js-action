@@ -51,19 +51,19 @@ const standardizePath = (collection_item: string, base_path: string) =>
 
 async function main() {
   try {
-    const ROOT_DIR = path.resolve("./collections");
+    const collection_path = core.getInput("collection_path");
+
+    // const ROOT_DIR = path.resolve("./collections");
+    const ROOT_DIR = path.resolve(collection_path);
+
     const base_path = getBasePath(ROOT_DIR);
     const result = await readFilesRecursively(ROOT_DIR);
 
     // console.log("Processed files:", result.keys());
-    // console.log("ROOT_DIR:");
 
     [...result.keys()].map((item) =>
       console.log(standardizePath(item, base_path))
     );
-
-    let a = path.resolve("./collections/Private API/drop database.bru");
-    console.log("ROOT_DIR:", a);
 
     // `who-to-greet` input defined in action metadata file
     // const nameToGreet = core.getInput("who-to-greet");

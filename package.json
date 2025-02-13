@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "tsx ./src/action.ts",
-    "build": "ncc build ./src/action.ts -o dist"
+    "build": "ncc build ./src/action.ts -o dist",
+    "clean": "&& rm -rf ./*.bru ./collection"
   },
   "keywords": [],
   "author": "",

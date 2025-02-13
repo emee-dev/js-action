@@ -27475,50 +27475,59 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
 
 
 
-const files = new Map();
-const isFile = (filePath) => __awaiter(void 0, void 0, void 0, function* () {
+// We assume the base path to be the collection folder.
+const getBasePath = (dir) => `/${external_path_default().basename(dir)}`;
+const readFilesRecursively = (dir_1, ...args_1) => __awaiter(void 0, [dir_1, ...args_1], void 0, function* (dir, fileMap = new Map()) {
     try {
-        const stats = yield promises_default().stat(filePath);
-        return stats.isFile();
-    }
-    catch (error) {
-        return false;
-    }
-});
-const readBruFile = (folder) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const items = yield promises_default().readdir(folder);
-        for (const item of items) {
-            const itemPath = external_path_default().resolve(folder, item);
-            if (yield isFile(itemPath)) {
-                if (files.has(itemPath)) {
-                    console.log(`File "${itemPath}" already exists.`);
-                    continue;
-                }
-                // Normalize filename and store content
-                const key = itemPath.replace(/\s/g, "_").toLowerCase();
-                files.set(key, yield promises_default().readFile(itemPath, "utf-8"));
+        const entries = yield promises_default().readdir(dir, { withFileTypes: true });
+        for (const entry of entries) {
+            const fullPath = external_path_default().resolve(dir, entry.name);
+            const posixPath = fullPath.replace(/\\/g, "/"); // Ensure Unix-style paths
+            if (entry.isFile()) {
+                fileMap.set(posixPath, yield promises_default().readFile(fullPath, "utf-8"));
             }
-            else {
-                yield readBruFile(itemPath);
+            else if (entry.isDirectory()) {
+                yield readFilesRecursively(fullPath, fileMap);
             }
         }
     }
     catch (error) {
-        console.error(`Error reading folder: ${folder}`, error);
+        console.error(`Error reading directory: ${dir}`, error);
     }
-    return files;
+    return fileMap;
 });
+/**
+ *
+ * @param collection_item
+ * @param base_path
+ * @returns
+ *
+ * Makes the file names unique across environments, by striping the machine specific directories
+ * and returning the relative file path under the collection folder.
+ *
+ * eg
+ *
+ * "C:\Users\DELL\Desktop\js-action\collections\Private API\drop database.bru"
+ *
+ * becomes
+ * ./collections/Private API/drop database.bru
+ */
+const standardizePath = (collection_item, base_path) => `.${base_path}` + collection_item.split(base_path)[1];
 function main() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
+            const collection_path = core.getInput("collection_path");
+            // const ROOT_DIR = path.resolve("./collections");
+            const ROOT_DIR = external_path_default().resolve(collection_path);
+            const base_path = getBasePath(ROOT_DIR);
+            const result = yield readFilesRecursively(ROOT_DIR);
+            // console.log("Processed files:", result.keys());
+            [...result.keys()].map((item) => console.log(standardizePath(item, base_path)));
             // `who-to-greet` input defined in action metadata file
             // const nameToGreet = core.getInput("who-to-greet");
             // console.log(`Hello ${nameToGreet}!`);
             // const time = new Date().toTimeString();
             // core.setOutput("time", time);
-            const result = yield readBruFile("./collections/");
-            console.log("Processed files:", result);
             // Get the JSON webhook payload for the event that triggered the workflow
             // const payload = JSON.stringify(github.context.payload, undefined, 2);
             // console.log(`The event payload: ${payload}`);

@@ -5,6 +5,10 @@ inputs:
     description: "Who to greet"
     required: true
     default: "World"
+  collection_path: # id of input
+    description: "Relative path to your collection eg ./collection"
+    required: true
+    default: "./collection"
 outputs:
   time: # id of output
     description: "The time we greeted you"
