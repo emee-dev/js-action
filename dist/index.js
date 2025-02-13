@@ -27477,6 +27477,7 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
 
 // We assume the base path to be the collection folder.
 const getBasePath = (dir) => `/${external_path_default().basename(dir)}`;
+const CHANGED_FILES_JSON = "changed_files.json";
 const readFilesRecursively = (dir_1, ...args_1) => __awaiter(void 0, [dir_1, ...args_1], void 0, function* (dir, fileMap = new Map()) {
     try {
         const entries = yield promises_default().readdir(dir, { withFileTypes: true });
@@ -27514,6 +27515,18 @@ const readFilesRecursively = (dir_1, ...args_1) => __awaiter(void 0, [dir_1, ...
  * "./collections/Private API/drop database.bru"
  */
 const standardizePath = (collection_item, base_path) => `.${base_path}` + collection_item.split(base_path)[1];
+// Function to read the JSON file containing changed files
+const getChangedFiles = () => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const data = yield promises_default().readFile(CHANGED_FILES_JSON, "utf-8");
+        const parsed = JSON.parse(data);
+        return parsed.changed_files || [];
+    }
+    catch (error) {
+        core.setFailed(`Failed to read changed files JSON: ${error.message}`);
+        return [];
+    }
+});
 function main() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -27527,6 +27540,12 @@ function main() {
             // [...result.keys()].map((item) =>
             //   console.log(standardizePath(item, base_path))
             // );
+            const changedFiles = yield getChangedFiles();
+            if (changedFiles.length === 0) {
+                console.log("No changed files detected in ./collections.");
+                return;
+            }
+            console.log("changedFiles", changedFiles);
             // `who-to-greet` input defined in action metadata file
             // const nameToGreet = core.getInput("who-to-greet");
             // console.log(`Hello ${nameToGreet}!`);

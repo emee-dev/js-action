@@ -1,22 +1,50 @@
+# name: Test
+
+# on:
+#   pull_request:
+#     types: [opened]
+
+# jobs:
+#   test:
+#     runs-on: ubuntu-latest
+#     steps:
+#       - uses: actions/checkout@v2
+#       - uses: ./
+
+#       - name: Get changed files
+#         id: changed-files
+#         uses: tj-actions/changed-files@v14.6
+
+#       - name: List all changed files
+#         run: |
+#           for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
+#             echo "$file was changed"
+#           done
+
 name: Test
 
 on:
   pull_request:
-    types: [opened]
+    types: [opened, synchronize]
 
 jobs:
   test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: ./
 
       - name: Get changed files
         id: changed-files
-        uses: tj-actions/changed-files@v14.6
+        uses: tj-actions/changed-files@v34
+        with:
+          files: collections/** # Track changes only in ./collections
 
-      - name: List all changed files
+      - name: Generate JSON of changed files
         run: |
-          for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
-            echo "$file was changed"
-          done
+          echo '${{ steps.changed-files.outputs.all_changed_files }}' | jq -R 'split(" ") | { changed_files: . }' > changed_files.json
+
+      - name: Upload changed files JSON
+        uses: actions/upload-artifact@v3
+        with:
+          name: changed-files
+          path: changed_files.json
