@@ -6,9 +6,9 @@ inputs:
     required: true
     default: "World"
   collection_path: # id of input
-    description: "Relative path to your collection eg ./collection"
+    description: "Relative path to your collection eg ./collections"
     required: true
-    default: "./collection"
+    default: "./collections"
 outputs:
   time: # id of output
     description: "The time we greeted you"
