@@ -12,8 +12,8 @@ jobs:
       - uses: ./
 
       - name: Get changed files
-      id: changed-files
-      uses: tj-actions/changed-files@v14.6
+        id: changed-files
+        uses: tj-actions/changed-files@v14.6
 
       - name: List all changed files
         run: |
