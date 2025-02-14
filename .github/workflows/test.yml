@@ -37,10 +37,17 @@ jobs:
       - name: Get changed files
         id: changed-files
         uses: tj-actions/changed-files@v44
+        with:
+          json: true
+          write_output_files: true
 
-      - name: Save changed files to JSON
+      - name: Verify the contents of the .collections/added_files.json file
         run: |
-          echo '${{ toJson(steps.changed-files.outputs.all_changed_files) }}' > changed_files.json
+          cat ./collections/added_files.json
+
+      # - name: Save changed files to JSON
+      #   run: |
+      #     echo '${{ toJson(steps.changed-files.outputs.all_changed_files) }}' > changed_files.json
 
       - name: Upload changed files JSON
         uses: actions/upload-artifact@v4

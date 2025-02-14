@@ -27461,8 +27461,7 @@ const promises_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.ur
 var promises_default = /*#__PURE__*/__nccwpck_require__.n(promises_namespaceObject);
 // EXTERNAL MODULE: external "path"
 var external_path_ = __nccwpck_require__(6928);
-var external_path_default = /*#__PURE__*/__nccwpck_require__.n(external_path_);
-;// CONCATENATED MODULE: ./src/action.ts
+;// CONCATENATED MODULE: ./src/utils/action.ts
 var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -27474,18 +27473,17 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
 };
 
 
-
 // We assume the base path to be the collection folder.
-const getBasePath = (dir) => `/${external_path_default().basename(dir)}`;
-const CHANGED_FILES_JSON = "changed_files.json";
+const getBasePath = (dir) => `/${path.basename(dir)}`;
+const normalPaths = (path) => path.replace(/\\/g, "/"); // Ensure Unix-style paths
 const readFilesRecursively = (dir_1, ...args_1) => __awaiter(void 0, [dir_1, ...args_1], void 0, function* (dir, fileMap = new Map()) {
     try {
-        const entries = yield promises_default().readdir(dir, { withFileTypes: true });
+        const entries = yield fs.readdir(dir, { withFileTypes: true });
         for (const entry of entries) {
-            const fullPath = external_path_default().resolve(dir, entry.name);
+            const fullPath = path.resolve(dir, entry.name);
             const posixPath = fullPath.replace(/\\/g, "/"); // Ensure Unix-style paths
             if (entry.isFile()) {
-                fileMap.set(posixPath, yield promises_default().readFile(fullPath, "utf-8"));
+                fileMap.set(posixPath, yield fs.readFile(fullPath, "utf-8"));
             }
             else if (entry.isDirectory()) {
                 yield readFilesRecursively(fullPath, fileMap);
@@ -27514,46 +27512,106 @@ const readFilesRecursively = (dir_1, ...args_1) => __awaiter(void 0, [dir_1, ...
  * // Result:
  * "./collections/Private API/drop database.bru"
  */
-const standardizePath = (collection_item, base_path) => `.${base_path}` + collection_item.split(base_path)[1];
-// Function to read the JSON file containing changed files
-const getChangedFiles = () => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const data = yield promises_default().readFile(CHANGED_FILES_JSON, "utf-8");
-        const parsed = JSON.parse(data);
-        return parsed.changed_files || [];
-    }
-    catch (error) {
-        core.setFailed(`Failed to read changed files JSON: ${error.message}`);
-        return [];
-    }
-});
+const normalizePath = (collection_item, base_path) => `.${base_path}` + collection_item.split(base_path)[1];
+
+;// CONCATENATED MODULE: external "node:fs"
+const external_node_fs_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("node:fs");
+;// CONCATENATED MODULE: ./src/action.ts
+var action_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+
+
+
+// import { glob } from "node:fs/promises";
+
+/**
+ * Action events:
+ *
+ * 1. Init:- Read all request files and store their schema(s).
+ * 2. Pull request:- Grab changed/modified collection request files,
+ *    compare their schema against what we have in database. If PR file
+ *    contains any structural change, then update the database record for
+ *    that particular request. If PR does not contain any schema changes
+ *    then restore request from database.
+ * 3. New file:- if a collection in PR could not be found in database,
+ *    then set it.
+ * 4. Deleted file:- If a PR file has a status of "deleted" then remove
+ *    from the database.
+ * 5. Renamed Collection:- Unload Database files then update their paths.
+ *
+ * CLI:- 1, 5 could be achieved via a cli interface.
+ */
+const getBruFiles = (collection) => {
+    return new Promise((resolve, reject) => {
+        glob(`${collection}/**/*.bru`, (err, v) => {
+            if (err) {
+                reject(err);
+            }
+            resolve(v);
+        });
+    });
+};
+const getOutputfile = (collection) => {
+    return new Promise((resolve, reject) => {
+        (0,external_node_fs_namespaceObject.glob)(`${collection}/**/*.json`, (err, v) => {
+            if (err) {
+                reject(err);
+            }
+            resolve(v);
+        });
+    });
+};
 function main() {
-    return __awaiter(this, void 0, void 0, function* () {
+    return action_awaiter(this, void 0, void 0, function* () {
         try {
+            // const db = new DB();
+            const formatted = [];
             const collection_path = process.env.NODE_ENV === "development"
                 ? "./collections"
                 : core.getInput("collection_path", { required: true });
-            const ROOT_DIR = external_path_default().resolve(collection_path);
-            const base_path = getBasePath(ROOT_DIR);
-            const result = yield readFilesRecursively(ROOT_DIR);
-            // console.log("Processed files:", result.keys());
-            // [...result.keys()].map((item) =>
-            //   console.log(standardizePath(item, base_path))
-            // );
-            const changedFiles = yield getChangedFiles();
-            if (changedFiles.length === 0) {
-                console.log("No changed files detected in ./collections.");
-                return;
+            // const files = await getBruFiles(collection_path);
+            // let count = 1;
+            // for (let i of files) {
+            //   let file_path = normalPaths(i);
+            //   let file_content = await fs.readFile(file_path, { encoding: "utf-8" });
+            //   formatted.push({
+            //     id: count++,
+            //     file_path: `./${file_path}`,
+            //     file_content: file_content,
+            //   });
+            // }
+            let output = yield getOutputfile(collection_path);
+            for (let i of output) {
+                let file_path = normalPaths(i);
+                let file_content = yield promises_default().readFile(file_path, { encoding: "utf-8" });
+                console.log(file_path, file_content);
             }
-            console.log("changedFiles", changedFiles);
-            // `who-to-greet` input defined in action metadata file
-            // const nameToGreet = core.getInput("who-to-greet");
-            // console.log(`Hello ${nameToGreet}!`);
-            // const time = new Date().toTimeString();
-            // core.setOutput("time", time);
-            // Get the JSON webhook payload for the event that triggered the workflow
-            // const payload = JSON.stringify(github.context.payload, undefined, 2);
-            // console.log(`The event payload: ${payload}`);
+            // if (process.env?.NODE_ENV !== "development") {
+            //   await DB.useLocalDB();
+            // }
+            // await db.dropTable();
+            // await db.createTable();
+            // await db.insertMany(formatted);
+            // let d = await db.getAllFiles();
+            // let findOne = await db.findOneByPath(
+            //   "./collections/Private API/drop database.bru"
+            // );
+            // console.log(
+            //   "findOne",
+            //   jsonToBruFile({
+            //     meta: bruFileToJson(findOne[0].file_content).meta,
+            //     // http: bruFileToJson(findOne[0].file_content).http,
+            //   })
+            // );
+            // console.log("length", d.length);
+            // console.log("data", d);
         }
         catch (error) {
             core.setFailed(error.message);
@@ -27561,4 +27619,12 @@ function main() {
     });
 }
 main();
+// `who-to-greet` input defined in action metadata file
+// const nameToGreet = core.getInput("who-to-greet");
+// console.log(`Hello ${nameToGreet}!`);
+// const time = new Date().toTimeString();
+// core.setOutput("time", time);
+// Get the JSON webhook payload for the event that triggered the workflow
+// const payload = JSON.stringify(github.context.payload, undefined, 2);
+// console.log(`The event payload: ${payload}`);
 
