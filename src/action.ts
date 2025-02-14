@@ -2,17 +2,15 @@ import * as core from "@actions/core";
 import github from "@actions/github";
 import fs from "node:fs/promises";
 import { globby } from "globby";
-import path from "path";
+// import path from "path";
 import {
   // getBasePath,
   // readFilesRecursively,
   // normalizePath,
   normalPaths,
 } from "./utils/action";
-import DB from "./db";
-import { bruFileToJson, jsonToBruFile } from "./bruno";
-// import { glob } from "node:fs/promises";
-import { glob } from "node:fs";
+// import DB from "./db";
+// import { bruFileToJson, jsonToBruFile } from "./bruno";
 
 /**
  * Action events:
@@ -32,39 +30,41 @@ import { glob } from "node:fs";
  * CLI:- 1, 5 could be achieved via a cli interface.
  */
 
-const getBruFiles = (collection: string) => {
-  return new Promise<string[]>((resolve, reject) => {
-    glob(`${collection}/**/*.bru`, (err, v) => {
-      if (err) {
-        reject(err);
-      }
+// const getBruFiles = (collection: string) => {
+//   return new Promise<string[]>((resolve, reject) => {
+//     glob(`${collection}/**/*.bru`, (err, v) => {
+//       if (err) {
+//         reject(err);
+//       }
 
-      resolve(v);
-    });
-  });
-};
+//       resolve(v);
+//     });
+//   });
+// };
 
-const getOutputfile = (collection: string) => {
-  return new Promise<string[]>((resolve, reject) => {
-    glob(`${collection}/**/*.json`, (err, v) => {
-      if (err) {
-        reject(err);
-      }
+// const getOutputfile = (collection: string) => {
+//   return new Promise<string[]>((resolve, reject) => {
+//     glob(`${collection}/**/*.json`, (err, v) => {
+//       if (err) {
+//         reject(err);
+//       }
 
-      resolve(v);
-    });
-  });
-};
+//       resolve(v);
+//     });
+//   });
+// };
 
 async function main() {
   try {
     // const db = new DB();
     const formatted = [];
 
-    const collection_path =
-      process.env.NODE_ENV === "development"
-        ? "./collections"
-        : core.getInput("collection_path", { required: true });
+    // const collection_path =
+    //   process.env.NODE_ENV === "development"
+    //     ? "./collections"
+    //     : core.getInput("collection_path", { required: true });
+
+    const collection_path = "./collections";
 
     // const files = await getBruFiles(collection_path);
 
