@@ -1,6 +1,7 @@
 import * as core from "@actions/core";
 import github from "@actions/github";
 import fs from "node:fs/promises";
+import { globby } from "globby";
 import path from "path";
 import {
   // getBasePath,
@@ -79,7 +80,16 @@ async function main() {
     //   });
     // }
 
-    let output = await getOutputfile(collection_path);
+    // let output = await getOutputfile(collection_path);
+
+    // for (let i of output) {
+    //   let file_path = normalPaths(i);
+    //   let file_content = await fs.readFile(file_path, { encoding: "utf-8" });
+
+    //   console.log(file_path, file_content);
+    // }
+
+    const output = await globby([`${collection_path}/**/*.json`]);
 
     for (let i of output) {
       let file_path = normalPaths(i);
