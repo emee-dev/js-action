@@ -42,6 +42,7 @@ jobs:
           write_output_files: true
 
       - name: Verify the contents of the .collections/added_files.json file
+        # TODO create the file if it doesnt exist
         run: |
           cat ./collections/added_files.json
 
