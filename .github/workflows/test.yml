@@ -2,18 +2,37 @@
 
 # on:
 #   pull_request:
-#     types: [opened]
+#     types: [opened, synchronize]
 
 # jobs:
 #   test:
 #     runs-on: ubuntu-latest
 #     steps:
-#       - uses: actions/checkout@v2
+#       - uses: actions/checkout@v4
 #       - uses: ./
 
 #       - name: Get changed files
 #         id: changed-files
-#         uses: tj-actions/changed-files@v14.6
+#         uses: tj-actions/changed-files@v44
+#         with:
+#           json: true
+#           write_output_files: true
+
+#       - name: Verify the contents of the .collections/added_files.json file
+#         # TODO create the file if it doesnt exist
+#         run: |
+#           cat ./collections/added_files.json
+
+#       # - name: Save changed files to JSON
+#       #   run: |
+#       #     echo '${{ toJson(steps.changed-files.outputs.all_changed_files) }}' > changed_files.json
+
+#       - name: Upload changed files JSON
+#         uses: actions/upload-artifact@v4
+#         with:
+#           name: changed-files
+#           path: changed_files.json
+#           retention-days: 1 # Keep artifact for 1 day
 
 #       - name: List all changed files
 #         run: |
@@ -31,8 +50,8 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: ./
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
       - name: Get changed files
         id: changed-files
@@ -41,21 +60,26 @@ jobs:
           json: true
           write_output_files: true
 
-      - name: Verify the contents of the .collections/added_files.json file
-        # TODO create the file if it doesnt exist
+      - name: Ensure collections directory exists
+        run: mkdir -p collections
+
+      - name: Create or update added_files.json
         run: |
-          cat ./collections/added_files.json
+          FILE_PATH="./collections/added_files.json"
+          if [ ! -f "$FILE_PATH" ]; then
+            echo "[]" > "$FILE_PATH"
+          fi
+          echo '${{ steps.changed-files.outputs.all_changed_files }}' > "$FILE_PATH"
 
-      # - name: Save changed files to JSON
-      #   run: |
-      #     echo '${{ toJson(steps.changed-files.outputs.all_changed_files) }}' > changed_files.json
+      - name: Verify the contents of added_files.json
+        run: cat ./collections/added_files.json
 
-      - name: Upload changed files JSON
+      - name: Upload changed files JSON as an artifact
         uses: actions/upload-artifact@v4
         with:
           name: changed-files
-          path: changed_files.json
-          retention-days: 1 # Keep artifact for 1 day
+          path: ./collections/added_files.json
+          retention-days: 1 # Keep the artifact for 1 day
 
       - name: List all changed files
         run: |
