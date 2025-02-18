@@ -1,38 +1,12 @@
 import { waddler } from "waddler";
 import fs from "node:fs/promises";
-// import fs from "node:fs";
+import path from "node:path";
 
-// const sql = waddler({ dbUrl: "./__snapshot__/data.duckdb", min: 1, max: 1 });
-
-// const result = await sql`select * from users where id = ${10}`;
-// const result = await sql`select * from store`;
-
-// console.log("result", result);
-
-// insert
-// const values = sql.values([
-// 	["Dan", "dan@acme.com", 25],
-// 	["Oleksii", "oleksii@acme.com", 22]
-// ]);
-// await sql`insert into "users" ("name", "email", "age") values ${values}`;
-
-// better
-// const table = sql.identifier("users")
-// const columns = sql.identifier(["id", "name", "age"]);
-// const values = sql.values([
-//   [sql.default, "Oleksii", 20],
-//   [sql.default, "Alex", 23],
-// ]);
-
-// await sql`insert into ${table} (${columns}) values ${values} returning ${columns};`;
-
-// read
-// const result = await sql`select * from users where id = ${10}`;
-
-type Schema = {
+export type Schema = {
   id: number;
   file_path: string;
   file_content: string;
+  _schema: string;
 };
 
 export default class DB<T extends Schema> {
@@ -40,8 +14,6 @@ export default class DB<T extends Schema> {
   collection_name: string;
   private sql: ReturnType<typeof waddler>;
   constructor() {
-    // TODO store db inside collection folder.
-
     this.useMemoryDB();
 
     if (!DB.instance) {
@@ -60,10 +32,11 @@ export default class DB<T extends Schema> {
     this.sql = waddler({ dbUrl: ":memory:" });
   }
 
-  static async useLocalDB() {
+  static async useLocalDB(collection: string) {
     const cwd = process.cwd();
 
-    const collection_folder = `${cwd}/collections`;
+    // const collection_folder = `${cwd}/${collection}`;
+    const collection_folder = path.resolve(cwd, collection);
     const schema_folder = `${collection_folder}/__schema__`;
 
     if (!(await this.instance.doesDirExist(collection_folder))) {
@@ -73,14 +46,13 @@ export default class DB<T extends Schema> {
 
     // @ts-expect-error
     this.instance.sql = waddler({
-      //   dbUrl: "./__snapshot__/schema.db",
       dbUrl: `${schema_folder}/schema.db`,
       min: 1,
       max: 1,
     });
   }
 
-  async doesDirExist(path: string) {
+  private async doesDirExist(path: string) {
     try {
       let ops = await fs.stat(path);
 
@@ -102,19 +74,12 @@ export default class DB<T extends Schema> {
     }
 
     // Create table
-    // await sql`
-    //   CREATE TABLE items (
-    //     id INTEGER PRIMARY KEY,
-    //     name VARCHAR,
-    //     description TEXT,
-    //     price DECIMAL
-    //   );
-    // `;
     await sql<Schema>`
       CREATE TABLE items (
         id INTEGER,
         file_path VARCHAR PRIMARY KEY,
-        file_content TEXT
+        file_content TEXT,
+        _schema: TEXT,
       );
     `;
   }
@@ -152,26 +117,14 @@ export default class DB<T extends Schema> {
       return;
     }
 
-    // Insert multiple items
-    // const args = [
-    //   { id: 1, file_path: "file_path 1", file_content: "file_content 1" },
-    //   { id: 2, file_path: "file_path 2", file_content: "file_content 2" },
-    //   { id: 3, file_path: "file_path 3", file_content: "file_content 3" },
-    // ];
-    // const items = Array(100_000)
-    //   .fill(null)
-    //   .map((i, idx) => {
-    //     return {
-    //       id: idx,
-    //       name: `Item ${idx}`,
-    //       description: `Description ${idx}`,
-    //       price: 9.99,
-    //     };
-    //   });
-
     await sql<void>`
-    INSERT INTO items (id, file_path, file_content) VALUES ${sql.values(
-      args.map((item) => [item.id, item.file_path, item.file_content])
+    INSERT INTO items (id, file_path, file_content, _schema) VALUES ${sql.values(
+      args.map((item) => [
+        item.id,
+        item.file_path,
+        item.file_content,
+        item._schema,
+      ])
     )}
   `;
   }
@@ -185,17 +138,17 @@ export default class DB<T extends Schema> {
     }
 
     // Updating
-    const updatedItem = {
+    const updatedItem: Schema = {
       id: 1,
-      name: "Updated Item 1",
-      description: "Updated Description 1",
-      price: 14.99,
+      file_path: "Updated Item 1",
+      file_content: "Updated Description 1",
+      _schema: "",
     };
 
     let update = await sql`
     UPDATE items
-    SET name = ${updatedItem.name}, description = ${updatedItem.description}, price = ${updatedItem.price}
-    WHERE id = ${updatedItem.id};
+    SET file_content = ${updatedItem.file_content}, _schema = ${updatedItem._schema}
+    WHERE file_path = ${updatedItem.file_path};
   `;
 
     console.log("update", update);
@@ -210,21 +163,9 @@ export default class DB<T extends Schema> {
     }
 
     // Query by Id
-    // const itemId = 1;
-    // const filePath = "file_path 1";
-
-    // const item = await sql<{
-    //   id: number;
-    //   name: string;
-    //   description: string;
-    //   price: number;
-    // }>`SELECT * FROM items WHERE id = ${filePath};`;
-
     // TODO make the query return a single document.
     const record =
       await sql<T>`SELECT * FROM items WHERE file_path = ${filePath};`;
-
-    // console.log("findOne", record);
 
     return record;
   }

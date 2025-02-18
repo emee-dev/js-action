@@ -9,6 +9,14 @@ import {
   // normalizePath,
   normalPaths,
 } from "./utils/action";
+import changedFilesInPR from "./demo";
+import {
+  bruFileToJson,
+  brunoDiffableProperties,
+  prepareBruFile,
+} from "./bruno";
+import DB, { Schema } from "./db";
+import Diff from "./utils/diff";
 // import DB from "./db";
 // import { bruFileToJson, jsonToBruFile } from "./bruno";
 
@@ -30,66 +38,52 @@ import {
  * CLI:- 1, 5 could be achieved via a cli interface.
  */
 
-// const getBruFiles = (collection: string) => {
-//   return new Promise<string[]>((resolve, reject) => {
-//     glob(`${collection}/**/*.bru`, (err, v) => {
-//       if (err) {
-//         reject(err);
-//       }
+const getBruFiles = async (collection: string) => {
+  return await globby([`${collection}/**/*.bru`]);
+};
 
-//       resolve(v);
-//     });
-//   });
-// };
-
-// const getOutputfile = (collection: string) => {
-//   return new Promise<string[]>((resolve, reject) => {
-//     glob(`${collection}/**/*.json`, (err, v) => {
-//       if (err) {
-//         reject(err);
-//       }
-
-//       resolve(v);
-//     });
-//   });
-// };
+const getOutputfile = async (collection: string) => {
+  return await globby([`${collection}/**/*.json`]);
+};
 
 async function main() {
   try {
-    // const db = new DB();
-    const formatted = [];
+    const db = new DB();
+    const collection_path = "./collections";
+
+    if (process.env?.NODE_ENV !== "development") {
+      await DB.useLocalDB(collection_path);
+    }
+
+    const diff = new Diff();
+    const formatted = [] as Schema[];
 
     // const collection_path =
     //   process.env.NODE_ENV === "development"
     //     ? "./collections"
     //     : core.getInput("collection_path", { required: true });
 
-    const collection_path = "./collections";
+    const files = await getBruFiles(collection_path);
 
-    // const files = await getBruFiles(collection_path);
+    let count = 1;
+    for (let i of files) {
+      let file_path = normalPaths(i);
+      let file_content = await fs.readFile(file_path, { encoding: "utf-8" });
 
-    // let count = 1;
-    // for (let i of files) {
-    //   let file_path = normalPaths(i);
-    //   let file_content = await fs.readFile(file_path, { encoding: "utf-8" });
+      let j = prepareBruFile(bruFileToJson(file_content));
 
-    //   formatted.push({
-    //     id: count++,
-    //     file_path: `./${file_path}`,
-    //     file_content: file_content,
-    //   });
-    // }
+      // console.log("j", j);
 
-    // let output = await getOutputfile(collection_path);
+      formatted.push({
+        id: count++,
+        file_path: file_path,
+        file_content: file_content,
+        _schema: diff.generateSchema(j),
+        // _schema: "",
+      });
+    }
 
-    // for (let i of output) {
-    //   let file_path = normalPaths(i);
-    //   let file_content = await fs.readFile(file_path, { encoding: "utf-8" });
-
-    //   console.log(file_path, file_content);
-    // }
-
-    const output = await globby([`${collection_path}/**/*.json`]);
+    let output = await getOutputfile(collection_path);
 
     for (let i of output) {
       let file_path = normalPaths(i);
@@ -98,13 +92,31 @@ async function main() {
       console.log(file_path, file_content);
     }
 
-    // if (process.env?.NODE_ENV !== "development") {
-    //   await DB.useLocalDB();
-    // }
-
     // await db.dropTable();
 
     // await db.createTable();
+
+    // await db.insertMany(formatted);
+
+    // Convert each entry to json
+    // changedFilesInPR.forEach((item, key, map) => {
+    //   const pr_change = prepareBruFile(bruFileToJson(item));
+    //   // console.log("latest:- \n", pr_change);
+
+    //   let db_entry = formatted.find((i) => i.file_path === key);
+    //   // console.log("db_entry:- \n", db_entry);
+
+    //   // const snapshot = prepareBruFile(bruFileToJson(db_entry.file_content));
+
+    //   const comparism = diff.compareAgainstSnapshotSchema(
+    //     db_entry._schema,
+    //     pr_change
+    //   );
+
+    //   console.log("diff", comparism);
+
+    //   // map.set(key, latest as any);
+    // });
 
     // await db.insertMany(formatted);
 
@@ -124,6 +136,8 @@ async function main() {
 
     // console.log("length", d.length);
     // console.log("data", d);
+
+    diffRequest();
   } catch (error) {
     core.setFailed(error.message);
   }
@@ -141,3 +155,17 @@ main();
 // Get the JSON webhook payload for the event that triggered the workflow
 // const payload = JSON.stringify(github.context.payload, undefined, 2);
 // console.log(`The event payload: ${payload}`);
+
+function diffRequest() {
+  // brunoDiffableProperties
+
+  let tempSnaphsot = {
+    file_path: "",
+  };
+
+  let tempLatest = {
+    file_path: "",
+  };
+
+  // console.log(k.namer);
+}
